@@ -12,5 +12,5 @@ The rover runs on ROS2 (tested on Foxy), and uses Python3.
 cd ~
 mkdir -p osr_ws
 cd osr_ws
-git clone 
+git clone https://github.com/YunSang123/osr_ws.git
 ```
