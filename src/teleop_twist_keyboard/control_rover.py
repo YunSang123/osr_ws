@@ -41,8 +41,8 @@ class RobotController(Node):
 
         # 속도 비례 상수
         self.alpha = 1.5  # 선속도 감소율을 결정하는 상수
-        self.max_lin_vel = 0.1  # 최대 선속도
-        self.max_ang_vel = 0.2  # 최대 각속도
+        self.max_lin_vel = 0.03  # 최대 선속도
+        self.max_ang_vel = 0.03  # 최대 각속도
 
     def joint_callback(self, msg):
         self.joint_state = msg.position[0]
