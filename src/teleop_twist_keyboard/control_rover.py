@@ -38,7 +38,12 @@ class RobotController(Node):
         self.clock = Clock()
         self.last_detected = self.clock.now()
         self.time_threshold = 3.0
-        self.max_lin_vel = 0.1
+
+        # 속도 비례 상수
+        self.k_linear = 0.5  # 선속도 비례 상수
+        self.k_angular = 1.0  # 각속도 비례 상수
+        self.max_lin_vel = 0.1  # 최대 선속도
+        self.max_ang_vel = 0.2  # 최대 각속도
 
     def joint_callback(self, msg):
         self.joint_state = msg.position[0]
@@ -57,23 +62,23 @@ class RobotController(Node):
         detected_duration = self.clock.now() - self.last_detected
         detected_duration_seconds = detected_duration.nanoseconds / 1e9  # 나노초를 초로 변환
 
+        # 선속도 및 각속도 계산
         if (self.distance > self.goal_distance) and (detected_duration_seconds < self.time_threshold):
             twist = Twist()
-            if self.joint_state > self.joint_threshold:
-                twist.linear.x = 0.01
-                twist.angular.z = 0.01
-                print("좌회전")
-            elif self.joint_state < -self.joint_threshold:
-                twist.linear.x = 0.01
-                twist.angular.z = -0.01
-                print("우회전")
-            else:
-                twist.linear.x = 0.01
-                twist.angular.z = 0.00
-                print("직진")
+
+            # 객체와의 거리에 비례하는 선속도 계산
+            v_linear = self.k_linear * (self.distance - self.goal_distance)
+            v_linear = min(self.max_lin_vel, max(0, v_linear))  # 최대 속도 제한
+
+            # 로봇팔의 회전 각도에 비례하는 각속도 계산
+            v_angular = self.k_angular * self.joint_state
+            v_angular = max(-self.max_ang_vel, min(self.max_ang_vel, v_angular))  # 최대 각속도 제한
+
+            twist.linear.x = v_linear  # 계산된 선속도 설정
+            twist.angular.z = v_angular  # 계산된 각속도 설정
 
             self.cmd_vel_pub.publish(twist)
-            self.get_logger().info('목표를 향해 이동 중입니다')
+            self.get_logger().info(f'Moving towards target: linear={v_linear}, angular={v_angular}')
         
         # 객체와 일정 거리를 유지함.
         else:
