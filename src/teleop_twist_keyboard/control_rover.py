@@ -40,8 +40,7 @@ class RobotController(Node):
         self.time_threshold = 3.0
 
         # 속도 비례 상수
-        self.k_linear = 0.5  # 선속도 비례 상수
-        self.k_angular = 1.0  # 각속도 비례 상수
+        self.alpha = 1.5  # 선속도 감소율을 결정하는 상수
         self.max_lin_vel = 0.1  # 최대 선속도
         self.max_ang_vel = 0.2  # 최대 각속도
 
@@ -66,19 +65,19 @@ class RobotController(Node):
         if (self.distance > self.goal_distance) and (detected_duration_seconds < self.time_threshold):
             twist = Twist()
 
-            # 객체와의 거리에 비례하는 선속도 계산
-            v_linear = self.k_linear * (self.distance - self.goal_distance)
+            # 객체와의 거리에 비례한 선속도 계산 (지수 함수 사용)
+            v_linear = self.max_lin_vel * (1 - math.exp(-self.alpha * (self.distance - self.goal_distance)))
             v_linear = min(self.max_lin_vel, max(0, v_linear))  # 최대 속도 제한
 
-            # 로봇팔의 회전 각도에 비례하는 각속도 계산
-            v_angular = self.k_angular * self.joint_state
+            # 로봇팔의 회전 각도에 따른 각속도 계산 (사인 함수 사용)
+            v_angular = self.max_ang_vel * math.sin(self.joint_state)
             v_angular = max(-self.max_ang_vel, min(self.max_ang_vel, v_angular))  # 최대 각속도 제한
 
             twist.linear.x = v_linear  # 계산된 선속도 설정
             twist.angular.z = v_angular  # 계산된 각속도 설정
 
             self.cmd_vel_pub.publish(twist)
-            self.get_logger().info(f'Moving towards target: linear={v_linear}, angular={v_angular}')
+            self.get_logger().info(f'Moving towards target: linear={v_linear:.3f}, angular={v_angular:.3f}')
         
         # 객체와 일정 거리를 유지함.
         else:
