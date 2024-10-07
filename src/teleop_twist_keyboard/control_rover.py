@@ -66,7 +66,7 @@ class RobotController(Node):
             twist = Twist()
 
             # 객체와의 거리에 비례한 선속도 계산 (지수 함수 사용)
-            v_linear = self.max_lin_vel * (1 - math.exp(-self.alpha * (self.distance - self.goal_distance)))
+            v_linear = self.max_lin_vel * (1 - math.exp(-self.alpha * (self.distance - self.goal_distance))) * max(math.cos(self.joint_state, cos(88*math.pi/180)))
             v_linear = min(self.max_lin_vel, max(0, v_linear))  # 최대 속도 제한
 
             # 로봇팔의 회전 각도에 따른 각속도 계산 (사인 함수 사용)
