@@ -83,12 +83,15 @@ class RobotController(Node):
         if (self.distance > self.goal_distance) and (detected_duration_seconds < self.time_threshold):
             twist = Twist()
 
-            # 객체와의 거리에 비례한 선속도 계산 (지수 함수 사용)
+            # Calculate turning radius
+            radius = self.distance/(2*math.sin(self.joint_state))
+            
+            # Calculate linear velocity
             v_linear = self.max_lin_vel * (1 - math.exp(-self.alpha * (self.distance - self.goal_distance + 0.0011))) * max(math.cos(self.joint_state), math.cos(88*math.pi/180))
             v_linear = min(self.max_lin_vel, max(0, v_linear))  # 최대 속도 제한
 
-            # 로봇팔의 회전 각도에 따른 각속도 계산 (사인 함수 사용)
-            v_angular = self.max_ang_vel * math.sin(self.joint_state)
+            # Calculate angular velocity
+            v_angular = v_linear / radius
             v_angular = max(-self.max_ang_vel, min(self.max_ang_vel, v_angular))  # 최대 각속도 제한
 
             twist.linear.x = v_linear  # 계산된 선속도 설정
