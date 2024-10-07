@@ -1,8 +1,8 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.clock import Clock
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import Twist, PointStamped
+from std_msgs.msg import Bool
 import math
 from sensor_msgs.msg import JointState
 
@@ -11,6 +11,7 @@ class RobotController(Node):
         super().__init__('robot_controller')
 
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.is_goal_pub = self.create_publisher(Bool, 'rover/is_goal', 10)
 
         self.joint_subscriber = self.create_subscription(
             JointState,
@@ -85,8 +86,12 @@ class RobotController(Node):
             twist.linear.x = 0.0
             twist.angular.z = 0.0
 
+            goal = Bool()
+            goal.data = True
+
             self.cmd_vel_pub.publish(twist)
             self.get_logger().info('목표 거리 도달, 정지 중입니다')
+            self.is_goal_pub.publish(goal)
 
 def main(args=None):
     rclpy.init(args=args)
